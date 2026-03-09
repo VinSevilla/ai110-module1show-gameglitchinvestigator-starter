@@ -1,3 +1,5 @@
+
+#FIX: Corrected guessing range for each dfficulty level.
 def get_range_for_difficulty(difficulty: str):
     """Return (low, high) inclusive range for a given difficulty."""
     if difficulty == "Easy":
