@@ -1,4 +1,4 @@
-from logic_utils import check_guess, update_score
+from logic_utils import check_guess, update_score, parse_guess
 
 #FIX: Added tests for check_guess and update_score functions to ensure game logic is correct.
 def test_winning_guess():
@@ -47,3 +47,37 @@ def test_update_score_drops_on_wrong():
 def test_update_score_win_unchanged():
     # win should not change the score
     assert update_score(30, "Win", 1) == 30
+
+
+def test_parse_guess_valid():
+    # valid integer inputs
+    ok, value, err = parse_guess("42")
+    assert ok == True
+    assert value == 42
+    assert err is None
+
+    # valid float input (should be converted to int)
+    ok, value, err = parse_guess("42.0")
+    assert ok == True
+    assert value == 42
+    assert err is None
+
+
+def test_parse_guess_invalid():
+    # empty string
+    ok, value, err = parse_guess("")
+    assert ok == False
+    assert value is None
+    assert err == "Enter a guess."
+
+    # None input
+    ok, value, err = parse_guess(None)
+    assert ok == False
+    assert value is None
+    assert err == "Enter a guess."
+
+    # non-numeric string
+    ok, value, err = parse_guess("abc")
+    assert ok == False
+    assert value is None
+    assert err == "That is not a number."
