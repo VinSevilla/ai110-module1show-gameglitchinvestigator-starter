@@ -34,6 +34,7 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "current_difficulty" not in st.session_state or st.session_state.current_difficulty != difficulty:
     st.session_state.secret = random.randint(low, high)
     st.session_state.current_difficulty = difficulty
+    st.session_state.last_hint = ""
 
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
@@ -48,6 +49,9 @@ if "score" not in st.session_state:
 if "status" not in st.session_state:
     st.session_state.status = "playing"
 
+if "last_hint" not in st.session_state:
+    st.session_state.last_hint = ""
+
 if "history" not in st.session_state:
     st.session_state.history = []
 
@@ -57,6 +61,7 @@ st.info(
     f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
+
 #FIX: rearranged debug expander to fix submit delay. 
 #FIX: added st.rerun() to allow debug interface to remain in same location.
 with st.expander("Developer Debug Info"):
@@ -66,6 +71,7 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
+# input and controls
 raw_guess = st.text_input(
     "Enter your guess:",
     key=f"guess_input_{difficulty}"
@@ -79,13 +85,19 @@ with col2:
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
+# Display last hint if show_hint is enabled and there's an active game
+if show_hint and st.session_state.status == "playing" and st.session_state.last_hint:
+    st.warning(st.session_state.last_hint)
+
 #FIX: added additional components to reset for new game
+#FIX: secret is now generated on new game and when difficulty changes, instead of only on new game.
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(low, high)
     st.session_state.score = 0
     st.session_state.status = "playing"
     st.session_state.history = []
+    st.session_state.last_hint = ""
     st.success("New game started.")
     st.rerun()
 
@@ -112,6 +124,8 @@ if submit:
             secret = st.session_state.secret
 
         outcome, message = check_guess(guess_int, secret)
+
+        st.session_state.last_hint = message
 
         if show_hint:
             st.warning(message)
