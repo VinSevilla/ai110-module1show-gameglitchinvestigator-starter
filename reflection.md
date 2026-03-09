@@ -8,6 +8,11 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 - List at least two concrete bugs you noticed at the start  
   (for example: "the hints were backwards").
 
+# RESPONSE
+
+The Game Glitch Investigator application is a randomly generated number guessing game. Structurally, the game was running fine with each feature seemingly doing it's intended task. You enter a guess, the game gives you an intended hint, and the "Developer Debug Info" records your score and attempt data. The issues within the game at first glance, are primarily because the features fall logically.
+Two immediate bugs that were apparent from the start were an incorrect hint consistently being given and the Developer Debug tab incorrectly recording user data.
+
 ---
 
 ## 2. How did you use AI as a teammate?
@@ -15,6 +20,10 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 - Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
+
+# RESPONSE
+
+The A.I tool used to complete this project is GitHub Copilot.
 
 ---
 
