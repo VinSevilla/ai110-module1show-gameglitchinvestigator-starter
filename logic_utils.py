@@ -38,39 +38,55 @@ def check_guess(guess, secret):
     """
     Compare guess to secret and return (outcome, message).
 
-    outcome examples: "Win", "Too High", "Too Low"
+    outcome examples: "Win", "Too High", "Too Low". Both inputs may be
+    ints or numeric strings (the latter introduced by a deliberate glitch).
+
+    We attempt numeric comparison first to avoid lexicographic errors like
+    "9" > "10".
     """
-    if guess == secret:
+    # coerce to integers when possible
+    try:
+        g_val = int(guess)
+        s_val = int(secret)
+    except Exception:
+        g_val = guess
+        s_val = secret
+
+    if g_val == s_val:
         return "Win", "🎉 Correct!"
 
     try:
-        if guess > secret:
+        if g_val > s_val:
             return "Too High", "📉 Go LOWER!"
         else:
             return "Too Low", "📈 Go HIGHER!"
     except TypeError:
-        g = str(guess)
-        if g == secret:
+        # fallback to string-based logic
+        g_str = str(guess)
+        s_str = str(secret)
+        if g_str == s_str:
             return "Win", "🎉 Correct!"
-        if g > secret:
+        if g_str > s_str:
             return "Too High", "📉 Go LOWER!"
         return "Too Low", "📈 Go HIGHER!"
 
 
-def update_score(current_score: int, outcome: str, attempt_number: int):
-    """Update score based on outcome and attempt number."""
+def update_score(current_score: int, outcome: str, attempt_number: int, max_score: int = None):
+    """Update score based on outcome.
+
+    Score starts at a max value (passed in or implied) and drops by 5 for each
+    incorrect guess. Wins do not change the score further. Score never goes below
+    zero.
+
+    The optional `max_score` argument is unused here but kept for compatibility
+    if callers choose to compute initial value elsewhere.
+    """
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
-        if points < 10:
-            points = 10
-        return current_score + points
+        # retain current score on win
+        return current_score
 
-    if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
-        return current_score - 5
-
-    if outcome == "Too Low":
-        return current_score - 5
-
-    return current_score
+    # incorrect guess, deduct 5 points but don't go negative
+    new_score = current_score - 5
+    if new_score < 0:
+        new_score = 0
+    return new_score
