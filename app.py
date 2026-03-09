@@ -30,10 +30,15 @@ low, high = get_range_for_difficulty(difficulty)
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
-# Regenerate secret if difficulty changed
+# Regenerate secret and reset game if difficulty changed
 if "current_difficulty" not in st.session_state or st.session_state.current_difficulty != difficulty:
     st.session_state.secret = random.randint(low, high)
     st.session_state.current_difficulty = difficulty
+    # reset game state as if starting new game
+    st.session_state.attempts = 0
+    st.session_state.score = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
     st.session_state.last_hint = ""
 
 if "secret" not in st.session_state:
