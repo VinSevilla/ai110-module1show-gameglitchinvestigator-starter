@@ -30,13 +30,14 @@ low, high = get_range_for_difficulty(difficulty)
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
-# Regenerate secret and reset game if difficulty changed
+
+#FIX:Regenerate secret and reset game if difficulty changed
 if "current_difficulty" not in st.session_state or st.session_state.current_difficulty != difficulty:
     st.session_state.secret = random.randint(low, high)
     st.session_state.current_difficulty = difficulty
     # reset game state as if starting new game
     st.session_state.attempts = 0
-    st.session_state.score = 0
+    st.session_state.score = attempt_limit * 5
     st.session_state.status = "playing"
     st.session_state.history = []
     st.session_state.last_hint = ""
@@ -49,7 +50,7 @@ if "attempts" not in st.session_state:
     st.session_state.attempts = 0
 
 if "score" not in st.session_state:
-    st.session_state.score = 0
+    st.session_state.score = attempt_limit * 5  # max score = 5 points per attempt allowed
 
 if "status" not in st.session_state:
     st.session_state.status = "playing"
@@ -76,22 +77,23 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
-# input and controls
-raw_guess = st.text_input(
-    "Enter your guess:",
-    key=f"guess_input_{difficulty}"
-)
+#FIX: input and controls wrapped in a form so Enter key works
+with st.form("guess_form"):
+    raw_guess = st.text_input(
+        "Enter your guess:",
+        key=f"guess_input_{difficulty}"
+    )
+    submit = st.form_submit_button("Submit Guess 🚀")
 
-col1, col2, col3 = st.columns(3)
+# new_game and show_hint remain outside form to trigger independently
+col1, col2 = st.columns(2)
 with col1:
-    submit = st.button("Submit Guess 🚀")
-with col2:
     new_game = st.button("New Game 🔁")
-with col3:
+with col2:
     show_hint = st.checkbox("Show hint", value=True)
 
-# Display last hint if show_hint is enabled and there's an active game
-if show_hint and st.session_state.status == "playing" and st.session_state.last_hint:
+# Display hint only for incorrect guesses when show_hint is enabled
+if show_hint and st.session_state.status == "playing" and st.session_state.last_hint and "Go" in st.session_state.last_hint:
     st.warning(st.session_state.last_hint)
 
 #FIX: added additional components to reset for new game
@@ -99,7 +101,7 @@ if show_hint and st.session_state.status == "playing" and st.session_state.last_
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(low, high)
-    st.session_state.score = 0
+    st.session_state.score = attempt_limit * 5
     st.session_state.status = "playing"
     st.session_state.history = []
     st.session_state.last_hint = ""
@@ -119,6 +121,8 @@ if submit:
     if not ok:
         st.session_state.history.append(raw_guess)
         st.error(err)
+        # Clear any previous hint for invalid guesses
+        st.session_state.last_hint = ""
     else:
         st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
@@ -130,18 +134,9 @@ if submit:
 
         outcome, message = check_guess(guess_int, secret)
 
-        st.session_state.last_hint = message
-
-        if show_hint:
-            st.warning(message)
-
-        st.session_state.score = update_score(
-            current_score=st.session_state.score,
-            outcome=outcome,
-            attempt_number=st.session_state.attempts,
-        )
-
         if outcome == "Win":
+            # Clear any previous hint for correct guesses
+            st.session_state.last_hint = ""
             st.balloons()
             st.session_state.status = "won"
             st.success(
@@ -149,6 +144,18 @@ if submit:
                 f"Final score: {st.session_state.score}"
             )
         else:
+            # Set hint for incorrect guesses
+            st.session_state.last_hint = message
+
+            if show_hint:
+                st.warning(message)
+
+            st.session_state.score = update_score(
+                current_score=st.session_state.score,
+                outcome=outcome,
+                attempt_number=st.session_state.attempts,
+            )
+
             if st.session_state.attempts >= attempt_limit:
                 st.session_state.status = "lost"
                 st.error(
