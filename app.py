@@ -75,7 +75,9 @@ with st.expander("Developer Debug Info"):
     st.write("Attempts:", st.session_state.attempts)
     st.write("Score:", st.session_state.score)
     st.write("Difficulty:", difficulty)
-    st.write("History:", st.session_state.history)
+    # Display history with 1-based indexing
+    history_display = [f"Guess {i+1}: {guess}" for i, guess in enumerate(st.session_state.history)]
+    st.write("History:", history_display)
 
 #FIX: input and controls wrapped in a form so Enter key works
 with st.form("guess_form"):
@@ -92,8 +94,8 @@ with col1:
 with col2:
     show_hint = st.checkbox("Show hint", value=True)
 
-# Display hint only for incorrect guesses when show_hint is enabled
-if show_hint and st.session_state.status == "playing" and st.session_state.last_hint and "Go" in st.session_state.last_hint:
+# Display last hint if show_hint is enabled and there's an active game
+if show_hint and st.session_state.status == "playing" and st.session_state.last_hint:
     st.warning(st.session_state.last_hint)
 
 #FIX: added additional components to reset for new game
@@ -121,8 +123,6 @@ if submit:
     if not ok:
         st.session_state.history.append(raw_guess)
         st.error(err)
-        # Clear any previous hint for invalid guesses
-        st.session_state.last_hint = ""
     else:
         st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
@@ -134,9 +134,18 @@ if submit:
 
         outcome, message = check_guess(guess_int, secret)
 
+        st.session_state.last_hint = message
+
+        if show_hint:
+            st.warning(message)
+
+        st.session_state.score = update_score(
+            current_score=st.session_state.score,
+            outcome=outcome,
+            attempt_number=st.session_state.attempts,
+        )
+
         if outcome == "Win":
-            # Clear any previous hint for correct guesses
-            st.session_state.last_hint = ""
             st.balloons()
             st.session_state.status = "won"
             st.success(
@@ -144,18 +153,6 @@ if submit:
                 f"Final score: {st.session_state.score}"
             )
         else:
-            # Set hint for incorrect guesses
-            st.session_state.last_hint = message
-
-            if show_hint:
-                st.warning(message)
-
-            st.session_state.score = update_score(
-                current_score=st.session_state.score,
-                outcome=outcome,
-                attempt_number=st.session_state.attempts,
-            )
-
             if st.session_state.attempts >= attempt_limit:
                 st.session_state.status = "lost"
                 st.error(
