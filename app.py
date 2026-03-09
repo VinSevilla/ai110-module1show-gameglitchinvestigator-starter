@@ -1,5 +1,7 @@
 import random
 import streamlit as st
+
+#FIX: Added missing imports for game logic functions.
 from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
@@ -27,6 +29,11 @@ low, high = get_range_for_difficulty(difficulty)
 
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
+
+# Regenerate secret if difficulty changed
+if "current_difficulty" not in st.session_state or st.session_state.current_difficulty != difficulty:
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.current_difficulty = difficulty
 
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
@@ -75,7 +82,7 @@ with col3:
 #FIX: added additional components to reset for new game
 if new_game:
     st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
+    st.session_state.secret = random.randint(low, high)
     st.session_state.score = 0
     st.session_state.status = "playing"
     st.session_state.history = []
